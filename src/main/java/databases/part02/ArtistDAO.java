@@ -1,5 +1,10 @@
 package databases.part02;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +39,22 @@ public class ArtistDAO {
     public List<Artist> getArtists() {
         List<Artist> artists = new ArrayList<>();
 
+        try (
+            Connection connection = DriverManager.getConnection(connectionString);
+            PreparedStatement statement = connection.prepareStatement("SELECT ArtistId, Name FROM Artist ORDER BY Name ASC");
+            ResultSet resultSet = statement.executeQuery())
+        {
+            while (resultSet.next()){
+                long id = resultSet.getLong("ArtistId");
+                String name = resultSet.getString("Name");
+                artists.add(new Artist(id, name));
+            }
+                        }
+                        catch (SQLException e){
+                            e.printStackTrace();
+                        }
+                        return artists;
+
         /*
          * hint: see the class from part 1 for an example of how to connect to the
          * database and retrieve data from it. This time create new Artist objects
@@ -44,7 +65,7 @@ public class ArtistDAO {
          * make tests run against your actual database, which may have unexpected data.
          */
 
-        return artists;
+        
     }
 
     /**
@@ -56,6 +77,13 @@ public class ArtistDAO {
      *         that id.
      */
     public Artist getArtistById(long id) {
+
+        for (Artist artist : getArtists()){
+            if(artist.getId() == id){
+                return artist;
+            }
+        }
+        return null;
         /*
          * hint: use similar code to the getArtists() method above, but add a WHERE
          * clause to the SQL query to only retrieve the artist with the specified id.
@@ -71,6 +99,6 @@ public class ArtistDAO {
          * to the database. You can't "hard code" the connection string, as that would
          * make tests run against your actual database, which may have unexpected data.
          */
-        return null;
+        
     }
 }
