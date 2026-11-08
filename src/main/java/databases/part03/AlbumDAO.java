@@ -1,5 +1,11 @@
 package databases.part03;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import databases.part02.Artist;
@@ -35,6 +41,25 @@ public class AlbumDAO {
      *         sorted by AlbumId in ascending order.
      */
     public List<Album> getAlbumsByArtist(Artist artist) {
+        List<Album> albumit = new ArrayList<>();
+
+        try (
+            Connection connection = DriverManager.getConnection(connectionString);
+            PreparedStatement statement = connection.prepareStatement("SELECT AlbumId, Title, ArtistId " + "FROM Album WHERE ArtistId = ? " + "ORDER BY AlbumId ASC" )
+        ){
+            statement.setLong(1, artist.getId());
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()){
+                long albumId = resultSet.getLong("AlbumId");
+                String title = resultSet.getString("Title");
+                long artistId = resultSet.getLong("ArtistId");
+                albumit.add(new Album(albumId, title, artistId));
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+        } return albumit;
+
+
         /*
          * hint: use the artist.getId() method to get the artist's id and add it to the
          * SQL query using PreparedStatement's setLong() method. See the previous hint
@@ -46,7 +71,7 @@ public class AlbumDAO {
          *
          * Make sure to sort the albums by AlbumId in ascending order (low to high).
          */
-        return null;
+        
     }
 
     /**
@@ -57,6 +82,19 @@ public class AlbumDAO {
      * @return true if the album was added successfully, false otherwise.
      */
     public boolean addAlbum(Album album) {
+        try (
+            Connection connection = DriverManager.getConnection(connectionString);
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO Album (Title, ArtistId) VALUES (?, ?)")
+        ){
+            statement.setString(1, album.getTitle());
+            statement.setLong(2, album.getArtistId());
+            return statement.executeUpdate() > 0;
+            
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+
+
         /*
          * hint 1: use PreparedStatement's setString() and setLong() methods to
          * add the album's title and artist id to the SQL query. Leave the AlbumId
@@ -78,6 +116,19 @@ public class AlbumDAO {
      * @return true if the album was updated successfully, false otherwise.
      */
     public boolean updateAlbum(Album album) {
+
+        try(
+        Connection connection = DriverManager.getConnection(connectionString);
+        PreparedStatement statement = connection.prepareStatement("UPDATE Album SET Title = ?, ArtistId = ? WHERE AlbumId = ?")
+        ){
+            statement.setString(1, album.getTitle());
+            statement.setLong(2, album.getArtistId());
+            statement.setLong(3, album.getId());
+            return statement.executeUpdate() > 0;
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
         /*
          * hint 1: use PreparedStatement's setString() and setLong() methods to
          * add the album's title and artist id to the SQL query. Do not change the
@@ -97,6 +148,16 @@ public class AlbumDAO {
      * @return true if the album was deleted successfully, false otherwise.
      */
     public boolean deleteAlbum(Album album) {
+        try(
+            Connection connection = DriverManager.getConnection(connectionString);
+            PreparedStatement statement = connection.prepareStatement("DELETE FROM Album WHERE AlbumId = ?")
+        ){
+            statement.setLong(1, album.getId());
+            return statement.executeUpdate() > 0;
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
         /*
          * See hints for the methods above.
          *
